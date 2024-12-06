@@ -79,4 +79,5 @@ for update in updates:
 def find_middle(l):
     return l[len(l)//2]
 
-print(sum(map(find_middle, correct)))
+part1 = sum(map(find_middle, correct))
+print(f'Part one: {part1}')
