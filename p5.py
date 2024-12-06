@@ -32,7 +32,7 @@ data = """47|53
 97,13,75,29,47
 """
 
-download.read(5)
+data = download.read(5)
 
 
 def parse_data(data):
@@ -49,7 +49,7 @@ def parse_data(data):
     updates = list(
         list(
             map(
-                lambda x: (int(x[0]), int(x[1])),
+                lambda x: list(int(i) for i in x),
                 map(lambda x: x.split(","), [line for line in lines if "," in line]),
             )
         )
@@ -70,9 +70,13 @@ def cmp(rules):
 
 
 rules, updates = parse_data(data)
+correct = []
 for update in updates:
     ordered = list(sorted(update, key=cmp_to_key(cmp(rules))))
     if ordered == update:
-        print(f"{update} {ordered} -> OK")
-    else:
-        print(f"{update} -> NOT OK")
+        correct.append(update)
+
+def find_middle(l):
+    return l[len(l)//2]
+
+print(sum(map(find_middle, correct)))
