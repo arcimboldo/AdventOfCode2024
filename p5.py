@@ -71,13 +71,19 @@ def cmp(rules):
 
 rules, updates = parse_data(data)
 correct = []
+incorrect = []
 for update in updates:
     ordered = list(sorted(update, key=cmp_to_key(cmp(rules))))
     if ordered == update:
         correct.append(update)
+    else:
+        incorrect.append(ordered)
 
 def find_middle(l):
     return l[len(l)//2]
 
 part1 = sum(map(find_middle, correct))
 print(f'Part one: {part1}')
+
+part2 = sum(map(find_middle, incorrect))
+print(f'Part two: {part2}')
