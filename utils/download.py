@@ -14,6 +14,8 @@ def get(day: int, path: str):
     s = requests.session()
     s.cookies.set("session", SESSION_COOKIE, domain='.adventofcode.com')
     resp = requests.get(url=url, cookies=s.cookies)
+    if resp.status_code != 200:
+        raise Exception("f{url} returned error {resp.status_code}")
     print(f'Input for day {day} returned {resp.status_code}')
     with open(path, 'w') as fd:
         fd.write(resp.text)
