@@ -22,16 +22,16 @@ def find_combinations2(cur, operands):
 
 
 class App(app.App):
-    def fill_operations(self, data):
+    def fill_operations(self):
         operations = dict()
-        for line in data.splitlines():
+        for line in self.data.splitlines():
             s, operands = line.split(":", 1)
             operations[int(s)] = list(map(int, operands.split()))
         return operations
 
-    def _runme(self, data, find_combinations_func, debug=False):
+    def _runme(self, find_combinations_func, debug=False):
         total = 0
-        operations = self.fill_operations(data)
+        operations = self.fill_operations()
         for s, operands in operations.items():
             x = find_combinations_func(operands[0], operands[1:])
             if debug:
@@ -40,11 +40,11 @@ class App(app.App):
                 total += s
         return total
 
-    def part_one(self, data, debug=False):
-        return self._runme(data, find_combinations, debug)
+    def part_one(self, debug=False):
+        return self._runme(find_combinations, debug)
 
     def part_two(self, data, debug=False):
-        return self._runme(data, find_combinations2, debug)
+        return self._runme(find_combinations2, debug)
 
 
 myapp = App(
