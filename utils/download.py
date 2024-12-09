@@ -10,6 +10,8 @@ SESSION_COOKIE = os.getenv('AOC_SESSION')
 def get(day: int, path: str):
     if os.path.exists(path):
         return
+    if not SESSION_COOKIE:
+        raise ValueError(f'You need to set AOC_SESSION environment variable to download the input file into {path}')
     url = BASEURL.format(day=day)
     s = requests.session()
     s.cookies.set("session", SESSION_COOKIE, domain='.adventofcode.com')
