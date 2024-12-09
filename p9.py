@@ -110,7 +110,11 @@ class App(app.App):
                 if empty_spaces[d][0] < min_space_idx:
                     min_space_idx = empty_spaces[d][0]
                     min_space = d
+            # left is the leftmost empty space where I can move the file at right
             left = empty_spaces[min_space].pop(0)
+            if left >= right:
+                self.log(f'Leftmost empty block is {left} which is to the right of {right} -> not swapping')
+                return 0
             if min_space > curlen:
                 empty_spaces[min_space-curlen].append(left+curlen)
                 empty_spaces[min_space-curlen].sort()
