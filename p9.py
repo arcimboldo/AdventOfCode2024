@@ -1,5 +1,5 @@
 from utils import app
-from itertools import starmap
+from itertools import starmap, chain
 from functools import reduce
 
 
@@ -19,14 +19,13 @@ class App(app.App):
             """
             n = int(c)
             if i % 2 == 0:
-                return str(i // 2) * n
+                return [str(i // 2)] * n
             else:
-                return "." * n
+                return ["."] * n
 
-        blocks = starmap(_str, enumerate(self.data))
-        self._strblocks = str.join("", blocks)
-        self._blocks = list(self._strblocks)
-        return self._blocks, self._strblocks
+        self._blocks = list(chain(*starmap(_str, enumerate(self.data))))
+        self.log(self._blocks)
+        return self._blocks
 
     @property
     def blocks(self):
@@ -34,13 +33,6 @@ class App(app.App):
         if not hasattr(self, "_blocks"):
             self.parse()
         return self._blocks
-
-    @property
-    def strblocks(self):
-        """Same as blocks, but as a single string"""
-        if not hasattr(self, "_strblocks"):
-            self.parse()
-        return self._strblocks
 
     def hash(self, blocks):
         """Compute the hash of the blocks"""
@@ -52,7 +44,7 @@ class App(app.App):
         )
 
     def part_one(self, debug=True):
-        self.log(f"blocks: {self.strblocks}")
+        # self.log(f"blocks: {self.strblocks}")
         self.log(f"hash: {self.hash(self.blocks)}")
 
         # make a copy. Only needed for representation
@@ -63,9 +55,9 @@ class App(app.App):
         curhash = self.hash(blocks)
 
         while left < right:
-            self.log(
-                f"left: {left}, right: {right}, blocks[{left}]: {blocks[left]}, blocks[{right}]: {blocks[right]}"
-            )
+            # self.log(
+                # f"left: {left}, right: {right}, blocks[{left}]: {blocks[left]}, blocks[{right}]: {blocks[right]}"
+            # )
             if blocks[left] != ".":
                 # no empty space to move to, skip
                 left += 1
@@ -78,11 +70,11 @@ class App(app.App):
             # This changes the hash by adding left*blocks[right] and removing right*blocks[right]
             curhash = curhash + left * int(blocks[right]) - right * int(blocks[right])
             # only useful for representation
-            blocks[left], blocks[right] = blocks[right], blocks[left]
+            blocks[left], blocks[right] = blocks[right], '.'
             # move indices right and left
             left, right = left + 1, right - 1
-        self.log(f'blocks: {str.join("", blocks)}')
-        self.log(f'computed hash: {curhash}, hash: {self.hash(str.join("", blocks))}')
+        self.log(f'blocks: {blocks}')
+        self.log(f'computed hash: {curhash}, hash: {self.hash(blocks)}')
         return curhash
 
     def part_two(self, debug=True):
@@ -92,3 +84,4 @@ class App(app.App):
 myapp = App("2333133121414131402")
 myapp.run()
 # got 92349417108 but it's too low
+#   6471961544878
