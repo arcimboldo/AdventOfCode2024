@@ -2,7 +2,7 @@ import collections
 from utils import app
 
 class App(app.App):
-    def part_one(self, debug=False):
+    def part_one(self):
         data = [i.split() for i in self.data.splitlines()]
         data = [(int(i), int(j)) for i, j in data]
         left = [i[0] for i in data]
@@ -14,7 +14,7 @@ class App(app.App):
             print(left, right, diff)
         return sum(diff)
         
-    def part_two(self, debug=False):
+    def part_two(self):
         data = [i.split() for i in self.data.splitlines()]
         data = [(int(i), int(j)) for i, j in data]
         left = [i[0] for i in data]
