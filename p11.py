@@ -5,15 +5,17 @@ from collections import defaultdict
 
 import sys
 
+
 @cache
-def blink(stone:int):
+def blink(stone: int):
     if stone == 0:
-        return 1,
-    if len(str(stone)) %2 == 0:
+        return (1,)
+    if len(str(stone)) % 2 == 0:
         s = str(stone)
-        n2 = len(s)//2
-        return  int(s[:n2]), int(s[n2:])
-    return stone*2024,
+        n2 = len(s) // 2
+        return int(s[:n2]), int(s[n2:])
+    return (stone * 2024,)
+
 
 class App(app.App):
     def part_one(self):
@@ -28,7 +30,7 @@ class App(app.App):
         stones = defaultdict(int)
         for s in self.data.split():
             stones[int(s)] += 1
-        
+
         for i in range(75):
             newstones = defaultdict(int)
             for k, n in stones.items():
@@ -38,7 +40,7 @@ class App(app.App):
         return sum(stones.values())
 
 
-myapp = App('''0 1 10 99 999''')
+myapp = App("""0 1 10 99 999""")
 # myapp = App('125 17')
 myapp.run()
 
