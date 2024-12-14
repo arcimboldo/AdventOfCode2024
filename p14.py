@@ -1,7 +1,15 @@
-from utils import app
+import colorama as cr
+import imageio.v3 as iio
+import numpy
+import os
 import re
+import subprocess
+import sys
+from scipy.stats import entropy
+
 from collections import defaultdict
-from itertools import product
+from itertools import product, batched
+from utils import app
 
 rerobot = re.compile(r"p=(-?[0-9]+),(-?[0-9]+) v=(-?[0-9]+),(-?[0-9]+)")
 
@@ -51,6 +59,13 @@ class App(app.App):
                 print(f'{roboloc.get(p, ".")}', end="")
             print("\n", end="")
 
+    def save_img(self, path):
+        # scale = 2
+        img = numpy.zeros((self.xmax, self.ymax, 3), dtype=numpy.uint8)
+        for r in self.robots:
+            img[r.px, r.py] = (0xFF, 0, 0)
+        iio.imwrite(path, img)
+
     def safety_factor(self):
         roboloc = defaultdict(int)
         for r in self.robots:
@@ -59,21 +74,26 @@ class App(app.App):
         # Quadrants are 0-xmax//2, xmax//2+1-xmax
         # and 0-ymax//2, ymax//2+1 - ymax
         factor = 1
-        for q in product([
-            # x start, end
-            (0, self.xmax//2), (self.xmax//2+1, self.xmax),
-        ], [
-            # y start end
-            (0, self.ymax//2), (self.ymax//2+1, self.ymax)
-        ]):
+        for q in product(
+            [
+                # x start, end
+                (0, self.xmax // 2),
+                (self.xmax // 2 + 1, self.xmax),
+            ],
+            [
+                # y start end
+                (0, self.ymax // 2),
+                (self.ymax // 2 + 1, self.ymax),
+            ],
+        ):
             # find how many in the quadrant
             count = 0
             for x in range(q[0][0], q[0][1]):
-                for y in range(q[1][0],q[1][1] ):
-                    count += roboloc[(x,y)]    
-            self.log(f'Quadrant, count: {count}')   
-            factor *= count    
-            
+                for y in range(q[1][0], q[1][1]):
+                    count += roboloc[(x, y)]
+            # self.log(f'Quadrant, count: {count}')
+            factor *= count
+
         return factor
 
     def part_one(self):
@@ -86,9 +106,25 @@ class App(app.App):
         return self.safety_factor()
 
     def part_two(self):
-        pass
+        safety = []
+        m = self.safety_factor()
 
-
+        for i in range(15000):
+            if i % 100 == 0:
+                    print(f'{i}')
+            for r in self.robots:
+                r.move()
+            safety.append(self.safety_factor())
+            path = f'img/part_two_{i:05}.png'
+            # if not os.path.exists(path) or os.path.getsize(path) < 600:
+            #     self.save_img(path)
+            #     subprocess.call(['mogrify', '-label', path, path])
+        idx=0
+        for i, s in enumerate(safety):
+            if s < m:
+                m = s
+                idx = i
+        return idx+1
 myapp = App(
     """
 p=0,4 v=3,-3
@@ -105,4 +141,13 @@ p=2,4 v=2,-3
 p=9,5 v=-3,-3
 """
 )
-myapp.run()
+
+# Visual search done using imagemagick
+if 'montage' in sys.argv:
+    for i, batch in enumerate(batched([f'img/part_two_{i:05}.png' for i in range(10000)], 120)):
+        out = f'out_{i:04}.png'
+        if not os.path.exists(out) or os.path.getsize(out) < 250000:
+            subprocess.call(['montage', '-label', '%l', '-tile', '15x8']+ list(batch) + [out])
+else:
+    myapp.run()
+
