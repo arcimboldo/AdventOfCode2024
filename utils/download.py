@@ -26,6 +26,6 @@ def get(day: int, path: str):
 
 
 def read(day: int) -> str:
-    path = f"{os.getcwd()}/{day}.input.txt"
+    path = f"{os.getcwd()}/{day:02}.input.txt"
     get(day, path)
     return open(path).read().strip()
