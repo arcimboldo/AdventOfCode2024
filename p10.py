@@ -44,13 +44,13 @@ class App(app.App):
                 paths.extend(self.visit((i, j), self.topo, 0))
         self.log(paths)
         return paths
-    
+
     def part_one(self):
         # probably unnecessary
         paths = self.visit_topo()
         score = defaultdict(int)
         visited = defaultdict(set)
-    
+
         for p in paths:
             head = tuple(p[0])
             tail = tuple(p[-2])
@@ -65,11 +65,11 @@ class App(app.App):
         all_paths = self.visit_topo()
         score = defaultdict(set)
         for path in all_paths:
-            if path[-1] != 9: continue
+            if path[-1] != 9:
+                continue
             score[tuple(path[0])].add(tuple(path))
-        
+
         return sum(len(p) for p in score.values())
-        
 
 
 # Visit from 9 and go backwards, if you find some point you visited already with

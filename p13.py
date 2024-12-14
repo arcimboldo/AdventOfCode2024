@@ -26,10 +26,11 @@ class App(app.App):
         return machines
 
     def solve_one(self, machine):
-        return self.solve(machine, lambda na, nb: 0<=na<=100 and 0<=nb<=100)
+        return self.solve(machine, lambda na, nb: 0 <= na <= 100 and 0 <= nb <= 100)
 
     def solve_two(self, machine):
         return self.solve(machine, lambda na, nb: True)
+
     def solve(self, machine, exit_condition):
         px, py = machine["prize"]
         ax, ay = machine["a"]
@@ -41,11 +42,11 @@ class App(app.App):
         #
         # In matrix representation, this is
         #
-        # |ax bx|  |na|  = |px| 
+        # |ax bx|  |na|  = |px|
         # |ay by|  |nb|    |py|
         #
         # Or you can use substitution
-        # 
+        #
         # na*ax + nb*bx = px
         # => na = (px-nb*bx)/ax
         # na*ay + nb*by = px
@@ -54,10 +55,10 @@ class App(app.App):
         # => nb(by - bx*ay/ax) = px-px*ay/ax
         # => nb = (py-px*ay/ax)/(by-bx*ay/ax)
         # => nb = (py*ax-px*ay)/(by*ax-bx*ay)
-        nb = (py*ax-px*ay)/(by*ax-bx*ay)
-        na = (px-nb*bx)/ax
+        nb = (py * ax - px * ay) / (by * ax - bx * ay)
+        na = (px - nb * bx) / ax
         if nb.is_integer() and na.is_integer() and exit_condition(na, nb):
-            return int(3*na + nb)
+            return int(3 * na + nb)
         return 0
 
     def _run(self, data, solver):
@@ -66,22 +67,22 @@ class App(app.App):
         for i, machine in enumerate(data):
             t = solver(machine)
             if t > 0:
-                self.log(f'Machine {i}, tokens: {t}')
+                self.log(f"Machine {i}, tokens: {t}")
                 prizes += 1
             else:
-                self.log(f'Machine {i} does not have solution')
+                self.log(f"Machine {i} does not have solution")
             tokens += t
         return tokens
 
     def part_one(self):
         return self._run(self.data, self.solve_one)
-    
+
     def part_two(self):
         data = self.data[:]
         big = 10000000000000
         for m in data:
-            x,y = m['prize']
-            m['prize'] = (x+big, y+big)
+            x, y = m["prize"]
+            m["prize"] = (x + big, y + big)
         return self._run(data, self.solve_two)
 
 
