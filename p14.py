@@ -5,7 +5,6 @@ import os
 import re
 import subprocess
 import sys
-from scipy.stats import entropy
 
 from collections import defaultdict
 from itertools import product, batched
@@ -31,9 +30,9 @@ class Robot:
     def v(self):
         return (self.vx, self.vy)
 
-    def move(self):
-        self.px = (self.px + self.vx) % self.xmax
-        self.py = (self.py + self.vy) % self.ymax
+    def move(self, n=1):
+        self.px = (self.px + self.vx*n) % self.xmax
+        self.py = (self.py + self.vy*n) % self.ymax
 
 
 class App(app.App):
@@ -41,7 +40,8 @@ class App(app.App):
         super().__init__(*args, **kw)
         self.xmax = 101 if self.prod else 11
         self.ymax = 103 if self.prod else 7
-
+    
+    def parse(self):
         self.robots = [
             Robot(line, self.xmax, self.ymax) for line in self.data.splitlines()
         ]
@@ -97,15 +97,14 @@ class App(app.App):
         return factor
 
     def part_one(self):
-
-        # self.print_robots(self.robots)
-        for i in range(100):
-            for r in self.robots:
-                r.move()
+        self.parse()
+        for r in self.robots:
+            r.move(100)
         self.print_robots()
         return self.safety_factor()
 
     def part_two(self):
+        self.parse()
         safety = []
         m = self.safety_factor()
 
@@ -116,9 +115,9 @@ class App(app.App):
                 r.move()
             safety.append(self.safety_factor())
             path = f'img/part_two_{i:05}.png'
-            # if not os.path.exists(path) or os.path.getsize(path) < 600:
-            #     self.save_img(path)
-            #     subprocess.call(['mogrify', '-label', path, path])
+            if not os.path.exists(path) or os.path.getsize(path) < 600:
+                self.save_img(path)
+                subprocess.call(['mogrify', '-label', path, path])
         idx=0
         for i, s in enumerate(safety):
             if s < m:
@@ -151,3 +150,4 @@ if 'montage' in sys.argv:
 else:
     myapp.run()
 
+### WTF 7502 is the solution, why the fuck?
