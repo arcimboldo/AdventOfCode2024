@@ -34,6 +34,8 @@ class Robot:
         self.px = (self.px + self.vx*n) % self.xmax
         self.py = (self.py + self.vy*n) % self.ymax
 
+# functional programming idea: a robot is a function that returns the position
+# once moved N times.
 
 class App(app.App):
     def __init__(self, *args, **kw):
@@ -114,7 +116,7 @@ class App(app.App):
             for r in self.robots:
                 r.move()
             safety.append(self.safety_factor())
-            path = f'img/part_two_{i:05}.png'
+            path = f'day14/part_two_{i:05}.png'
             if not os.path.exists(path) or os.path.getsize(path) < 600:
                 self.save_img(path)
                 subprocess.call(['mogrify', '-label', path, path])
@@ -143,8 +145,8 @@ p=9,5 v=-3,-3
 
 # Visual search done using imagemagick
 if 'montage' in sys.argv:
-    for i, batch in enumerate(batched([f'img/part_two_{i:05}.png' for i in range(10000)], 120)):
-        out = f'out_{i:04}.png'
+    for i, batch in enumerate(batched([f'day14/part_two_{i:05}.png' for i in range(10000)], 120)):
+        out = f'day14/out_{i:04}.png'
         if not os.path.exists(out) or os.path.getsize(out) < 250000:
             subprocess.call(['montage', '-label', '%l', '-tile', '15x8']+ list(batch) + [out])
 else:
