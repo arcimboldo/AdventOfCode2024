@@ -97,12 +97,30 @@ def move(floorplan, r, d):
                 # Check again if if you find boxes, and re-apply
                 # Basically call recursively a function first_empty_slot(column, startrow) with x either the robot, or the box we found
                 # Then move the boxes independently, from up to down when moving up, down to up when moving up   
-                for j in range(i, r[0], -dr):
-                    floorplan[j][r[1]] = floorplan[j - dr][r[1]]
-                floorplan[r[0]][r[1]] = "."
-                return floorplan, (r[0] + dr, r[1] + dc)
+                #
+                # Note: for a box to move it requires that both sides can move
+                f, rrow = move_column(floorplan, r[1], r[0], i, dr)
+                return f, (rrow, r[1])
     return floorplan, (r[0], r[1])
 
+def move_column(floorplan, col, start, end, direction):
+    """Move a slice of column `col` up (direction < 0) or down (direction > 0)
+    from start to end (row index).
+
+    Args:
+      floorplan: the floorplan, which *will be modified*
+      col: the current column to move
+      start: the starting point (for instance, the index of the row of the robot)
+      end: the ending point (for intsance, the first empty space available)
+      direction: +1 or -1, depending if you are going down or up 
+    
+    Returns: 
+      floorplan, robox: the updated floorplan and the new row index of the robot
+    """
+    for j in range(end, start, -direction):
+        floorplan[j][col] = floorplan[j-direction][col]
+    floorplan[start][col] = "."
+    return floorplan, start+direction
 
 def print_map(floorplan):
     for i, line in enumerate(floorplan):
@@ -112,18 +130,22 @@ def print_map(floorplan):
 class App(app.App):
     def part_one(self):
         floorplan, directions, robot = parse(self.data)
-        print_map(floorplan)
+        if self.debug:
+            print_map(floorplan)
         for d in directions:
             floorplan, robot = move(floorplan, robot, d)
             # print(f'Move: {d}')
             # print_map(floorplan)
-        print("-" * len(floorplan[0]))
-        print_map(floorplan)
+        self.log("-" * len(floorplan[0]))
+        if self.debug:
+            print_map(floorplan)
         return cost(floorplan)
 
     def part_two(self):
         floorplan, directions, robot = parse2(self.data)
-        print_map(floorplan)
+        return 0
+        if self.debug:
+            print_map(floorplan)
         for d in directions:
             print(f"Move: {d} robot: {robot}")
             floorplan, robot = move(floorplan, robot, d)
@@ -156,3 +178,10 @@ v^^>>><<^^<>>^v^<v^vv<>v^<<>^<^v^v><^<<<><<^<v><v<>vv>>v><v^<vv<>v^<<^
 )
 
 myapp.run()
+
+# Day 15 TEST
+#   part one: 10092
+#   part two: 0
+# Day 15 PROD
+#   part one: 1577255
+#   part two: 0
