@@ -34,16 +34,25 @@ class App:
 
     def _test(self, method, want_test, want_prod):
         oldprod = self.prod
+        toret = True
         self.prod = False
         got_test = method()
-        if want_test is not None and got_test != want_test:
-            print(f'ERROR: TEST run of {method.__name__}: got {got_test}, expected {want_test} instead')
+        if want_test is not None:
+            if got_test != want_test:
+                print(f'ERROR: TEST run of {method.__name__}: got {got_test}, expected {want_test} instead')
+                toret = False
+            else:
+                print(f'OK TEST run of {method.__name__}: {got_test}')
         self.prod = True
-        got_prod = method()
-        if want_prod is not None and got_prod != want_prod:
-            print(f'ERROR: TEST run of {method.__name__}: got {got_test}, expected {want_prod} instead')
+        if want_prod is not None:
+            got_prod = method()
+            if got_prod != want_prod:
+                print(f'ERROR: PROD run of {method.__name__}: got {got_prod}, expected {want_prod} instead')
+                toret = False            
+            else:
+                print(f'OK PROD run of {method.__name__}: {got_prod}')
         self.prod = oldprod
-        return got_test == want_test and got_prod == want_prod
+        return toret
 
     def test_one(self, *args, **kw):
         return self._test(self.part_one, *args, **kw)
