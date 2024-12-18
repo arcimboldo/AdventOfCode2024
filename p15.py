@@ -1,6 +1,8 @@
 from utils import app
 from matplotlib import pyplot as plt
 from itertools import chain
+import sys
+
 
 WALL = "#"
 BOX = "O"
@@ -52,7 +54,7 @@ def cost(floorplan):
         (100 * i + j)
         for i, line in enumerate(floorplan)
         for j, c in enumerate(line)
-        if c == BOX
+        if c in (BOX, "[")
     )
     # for i, line in enumerate(floorplan):
     #     for j, c in enumerate(line):
@@ -87,40 +89,73 @@ def move(floorplan, r, d):
                 return floorplan, (r[0] + dr, r[1] + dc)
     else:
         # Move up/down
-        for i in range(r[0], 0 if dr == -1 else len(floorplan), dr):
-            if floorplan[i][r[1]] == "#":
-                break
-            if floorplan[i][r[1]] == ".":
-                # For Part two, we need to check if we are moving boxes.
-                # Go up/down until you reach a box. If it's [, then check from r[0] to i if r[1]+1 can move
-                # If it's ] then check r[1]-1.
-                # Check again if if you find boxes, and re-apply
-                # Basically call recursively a function first_empty_slot(column, startrow) with x either the robot, or the box we found
-                # Then move the boxes independently, from up to down when moving up, down to up when moving up   
-                #
-                # Note: for a box to move it requires that both sides can move
-                f, rrow = move_column(floorplan, r[1], r[0], i, dr)
-                return f, (rrow, r[1])
+        i = first_empty_space(floorplan, r[1], r[0], dr)
+        if i != -1:
+            move_vertically(floorplan, r[1], r[0], dr)
+            return floorplan, (r[0] + dr, r[1])
     return floorplan, (r[0], r[1])
 
-def move_column(floorplan, col, start, end, direction):
-    """Move a slice of column `col` up (direction < 0) or down (direction > 0)
-    from start to end (row index).
 
-    Args:
-      floorplan: the floorplan, which *will be modified*
-      col: the current column to move
-      start: the starting point (for instance, the index of the row of the robot)
-      end: the ending point (for intsance, the first empty space available)
-      direction: +1 or -1, depending if you are going down or up 
-    
-    Returns: 
-      floorplan, robox: the updated floorplan and the new row index of the robot
-    """
-    for j in range(end, start, -direction):
-        floorplan[j][col] = floorplan[j-direction][col]
-    floorplan[start][col] = "."
-    return floorplan, start+direction
+def first_empty_space(floorplan, col, start, direction):
+    """Find the first empty space of a column col, starting from start.
+
+    Returns the index of the empty space or -1 if we cannot move this column."""
+    for j in range(start, 0 if direction < 0 else len(floorplan), direction):
+        if floorplan[j][col] == "[":
+            left, right = (
+                first_empty_space(floorplan, col, j + direction, direction),
+                first_empty_space(floorplan, col + 1, j + direction, direction),
+            )
+            if -1 in (left, right):
+                return -1
+            if direction < 0:  # going up
+                return max(left, right)
+            else:
+                return min(left, right)
+        elif floorplan[j][col] == "]":
+            left, right = (
+                first_empty_space(floorplan, col, j + direction, direction),
+                first_empty_space(floorplan, col - 1, j + direction, direction),
+            )
+            if -1 in (left, right):
+                return -1
+            if direction < 0:  # going up
+                return max(left, right)
+            else:
+                return min(left, right)
+        elif floorplan[j][col] == ".":
+            return j
+        elif floorplan[j][col] == "#":
+            return -1
+    return -1
+
+
+def move_vertically(floorplan, col, row, direction):
+    # We move this piece if we can, otherwise we move first whatever we can move
+    next = floorplan[row + direction][col]
+    if next == ".":
+        # Good, let's just move
+        floorplan[row + direction][col] = floorplan[row][col]
+        # Let's put an empty space, it might be overwritten by the caller if necessary
+        floorplan[row][col] = "."
+    elif next == "O":
+        move_vertically(floorplan, col, row + direction, direction)
+        floorplan[row + direction][col] = floorplan[row][col]
+        floorplan[row][col] = "."
+    elif next == "[":
+        # Move the next and the one to the right of the next
+        move_vertically(floorplan, col, row + direction, direction)
+        move_vertically(floorplan, col + 1, row + direction, direction)
+        floorplan[row + direction][col] = floorplan[row][col]
+        floorplan[row][col] = "."
+    elif next == "]":
+        # Move the next and the one to the left of the next
+        move_vertically(floorplan, col, row + direction, direction)
+        move_vertically(floorplan, col - 1, row + direction, direction)
+        floorplan[row + direction][col] = floorplan[row][col]
+        floorplan[row][col] = "."
+    return
+
 
 def print_map(floorplan):
     for i, line in enumerate(floorplan):
@@ -134,26 +169,34 @@ class App(app.App):
             print_map(floorplan)
         for d in directions:
             floorplan, robot = move(floorplan, robot, d)
-            # print(f'Move: {d}')
-            # print_map(floorplan)
-        self.log("-" * len(floorplan[0]))
+            if self.debug:
+                print(f"Move: {d}")
+                print_map(floorplan)
+        self.log("=" * len(floorplan[0]))
         if self.debug:
+            print("=== end run ===")
             print_map(floorplan)
         return cost(floorplan)
 
     def part_two(self):
         floorplan, directions, robot = parse2(self.data)
-        return 0
         if self.debug:
             print_map(floorplan)
         for d in directions:
-            print(f"Move: {d} robot: {robot}")
             floorplan, robot = move(floorplan, robot, d)
+            if self.debug:
+                print(f"Move: {d}")
+                print_map(floorplan)
+        self.log("-" * len(floorplan[0]))
+        if self.debug:
             print_map(floorplan)
+        return cost(floorplan)
 
 
 myapp = App(
-    """##########
+    ""
+    """
+##########
 #..O..O.O#
 #......O.#
 #.OO..O.O#
@@ -177,7 +220,11 @@ v^^>>><<^^<>>^v^<v^vv<>v^<<>^<^v^v><^<<<><<^<v><v<>vv>>v><v^<vv<>v^<<^
 """
 )
 
+if not myapp.test_one(10092, 1577255) or not myapp.test_two(9021, 1597035):
+    sys.exit(1)
+
 myapp.run()
+
 
 # Day 15 TEST
 #   part one: 10092
