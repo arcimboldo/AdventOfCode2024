@@ -36,11 +36,11 @@ class App:
         oldprod = self.prod
         self.prod = False
         got_test = method()
-        if got_test != want_test:
+        if want_test is not None and got_test != want_test:
             print(f'ERROR: TEST run of {method.__name__}: got {got_test}, expected {want_test} instead')
         self.prod = True
         got_prod = method()
-        if got_prod != want_prod:
+        if want_prod is not None and got_prod != want_prod:
             print(f'ERROR: TEST run of {method.__name__}: got {got_test}, expected {want_prod} instead')
         self.prod = oldprod
         return got_test == want_test and got_prod == want_prod
