@@ -2,7 +2,7 @@ from collections import deque, defaultdict
 from functools import reduce
 from utils import app
 import sys
-import colorama  as cr
+import colorama as cr
 
 # Cost of turning 90degree: 1000
 # cost of moving one step forward: 1
@@ -22,11 +22,11 @@ def search_with_queue(maze, start, curdir):
     all_shortest_paths = []
 
     # Current minimum cost
-    min_cost = float('inf')
+    min_cost = float("inf")
 
-    # path_costs dictionary node -> cost    
+    # path_costs dictionary node -> cost
     # Default cost for all nodes is inf
-    path_costs = defaultdict(lambda: float('inf')) | {(start, curdir):0}
+    path_costs = defaultdict(lambda: float("inf")) | {(start, curdir): 0}
 
     # Current queue of nodes
     # (node, current_direction, cost, [path as list of nodes to get here, including the node])
@@ -35,7 +35,7 @@ def search_with_queue(maze, start, curdir):
 
     # We don't really know the position of the exit point yet but we will
     E = None
-    
+
     while queue:
         p, curdir, cost, path = queue.pop()
         if maze[p] == "E":
@@ -62,18 +62,17 @@ def search_with_queue(maze, start, curdir):
         neighbors = [n for n in neighbors if maze[n[0]] != "#"]
 
         # For each neighbor, check if the cost to get there is lower than the
-        # current cost        
+        # current cost
         for n, d, c in neighbors:
-            new_cost = cost+c
+            new_cost = cost + c
             # do we need strict less?
             if new_cost <= path_costs[(n, d)]:
                 path_costs[(n, d)] = new_cost
-                queue.append((n, d, new_cost, path+[n]))
+                queue.append((n, d, new_cost, path + [n]))
     # print where are you coming from
     if E is None:
         raise Exception(f"Unable to solve maze.")
     return min_cost, all_shortest_paths
-   # return cost[E], paths
 
 
 def parse(data):
@@ -90,6 +89,20 @@ def parse(data):
 def print_maze(maze):
     maxrow = int(max(i.real for i in maze)) + 1
     maxcol = int(max(i.imag for i in maze)) + 1
+    header = []
+    zeronine = "0123456789"
+
+    if maxcol > 10:
+        header.append(
+            " " * 14
+            + str.join("", [i * 10 for i in zeronine[1:]] + [i * 10 for i in zeronine])[
+                : maxcol - 10
+            ]
+        )
+    header.append(" " * 4 + zeronine * (maxcol // 10) + zeronine[: maxcol % 10])
+    print(str.join("\n", header))
+    # '    ' + '123456789' + '123456789' maxcol//10 times + maxcol%10
+
     for row in range(maxrow):
         print(
             f"{row:03} " + str.join("", [maze[row + col * 1j] for col in range(maxcol)])
@@ -137,7 +150,7 @@ myapp = App(
 ###############
 """
 )
-
+# Test runs
 myapp.test_one(7036, None)
 myapp.test_two(45, None)
 myapp = App(
@@ -161,7 +174,12 @@ myapp = App(
 #################
 """
 )
-myapp.test_one(11048, 123540)
-myapp.test_two(64, 665)
+# Test runs
+myapp.test_one(11048, None)
+myapp.test_two(64, None)
+
+# Prod runs
+myapp.test_one(None, 123540)
+myapp.test_two(None, 665)
 
 # myapp.run()
