@@ -9,7 +9,6 @@ import colorama  as cr
 # Starting direction: east, that is: 1j
 
 INF = float("inf")
-sys.setrecursionlimit(10000)
 
 DIRECTIONS = {1: "v", 1j: ">", -1j: "<", -1: "^"}
 EAST = 1j
@@ -18,102 +17,62 @@ NORTH = -1
 SOUTH = 1
 
 
-def search_recursive(maze, p, curdir, visited, mycost):
-    neighbors = [
-        # point, direction, cost
-        # Same direction
-        (p + curdir, curdir, 1),
-        # Turning right
-        (p + curdir * 1j, curdir * 1j, 1001),
-        # turning left
-        (p + curdir * -1j, curdir * -1j, 1001),
-        # going backwards
-        # (p + curdir * -1, curdir * -1, 2001),
-    ]
-    neighbors = [n for n in neighbors if maze[n[0]] != "#"]
-    visited[p] = mycost
-    trees = []  # next point, cost of next point, result of the search
-    for n, d, c in neighbors:
-        if n in visited and visited[n] < c + mycost:
-            continue
-        if maze[n] == "E":
-            trees.append([n, c, 0])
-        elif maze[n] == ".":
-            trees.append([n, c, search_recursive(maze, n, d, visited, mycost + c)])
-    cost = INF
-    for n, c, s in trees:
-        if cost > c + s:
-            cost = c + s
-    return cost
+def search_with_queue(maze, start, curdir):
+    # list all the shortest paths
+    all_shortest_paths = []
 
+    # Current minimum cost
+    min_cost = float('inf')
 
-def search_with_queue(maze, p, curdir):
-    visited = set()
-    cost = {}
-    # Stores the next point, the directory we come from, and the whole path we did to get there
-    queue = deque()
-    queue.append((p, curdir, [(p, 0, DIRECTIONS[EAST])]))
+    # path_costs dictionary node -> cost    
+    # Default cost for all nodes is inf
+    path_costs = defaultdict(lambda: float('inf')) | {start:0}
 
-    cost[p] = 0
-    comefrom = {}
-    exit_paths = []
+    # Current queue of nodes
+    # (node, current_direction, cost, [path as list of nodes to get here, including the node])
+    # Initialize to the start node
+    queue = deque(((start, curdir, 0, [start]),))
+
+    # We don't really know the position of the exit point yet but we will
     E = None
-
-    breakpoint = False
+    
     while queue:
-        p, curdir, path = queue.pop()
+        p, curdir, cost, path = queue.pop()
         if maze[p] == "E":
             E = p
-            exit_paths.append(path)
+            if cost < min_cost:
+                # reset all shortest paths and minimum cost
+                min_cost = cost
+                all_shortest_paths = [path]
+            elif cost == min_cost:
+                # simply add this to the list of shortest paths
+                all_shortest_paths.append(path)
             continue
 
-        # If p is the end goal, we are done
+        # Add the neighbors to the queue
         neighbors = [
             # point, direction, cost
             (p + curdir, curdir, 1),
             (p + curdir * 1j, curdir * 1j, 1001),
             (p + curdir * -1j, curdir * -1j, 1001),
-            # This is unlikely to ever happen, it means we go backwards
+            # NEVER GO BACK!
             # (p + curdir * -1, curdir * -1, 2001),
         ]
-        # These are the neighbors I can actually visit
+        # Filter out walls
         neighbors = [n for n in neighbors if maze[n[0]] != "#"]
-        # For each neighbor, check if the cost to get there is lower than the
-        # current cost
-        tmp = maze.copy()
-        tmp[p] = DIRECTIONS[curdir]
 
+        # For each neighbor, check if the cost to get there is lower than the
+        # current cost        
         for n, d, c in neighbors:
-            tmp[n] = 'n'
-            if n not in cost or cost[n] >= cost[p] + c:
-                cost[n] = cost[p] + c
-                comefrom[n] = (p, d)
-                queue.append((n, d, path + [(n, c, DIRECTIONS[d])]))
-        print(cr.ansi.clear_screen(), end='')
-        print_maze(tmp)
-        input()
+            new_cost = cost+c
+            # do we need strict less?
+            if new_cost <= path_costs[n]:
+                path_costs[n] = new_cost
+                queue.append((n, d, new_cost, path+[n]))
     # print where are you coming from
     if E is None:
-        raise Exception(f"Unable to solve maze. comefrom: {comefrom}")
-    mincost = cost[E]
-    paths = []
-
-    for p in exit_paths:
-        paths.append(
-            (
-                list(reduce(lambda acc, x: acc + [x[0]], p, [])),
-                sum([x[1] for x in p]),
-                list(reduce(lambda acc, x: acc + [x[2]], p, [])),
-            ),
-        )
-    optimal_paths = list(filter(lambda x: x[1] == mincost, paths))
-    
-    x = comefrom[E]
-    while x:
-        char = {1: "v", 1j: ">", -1j: "<", -1: "^"}
-        path.append((x[0], char[x[1]]))
-        x = comefrom.get(x[0], None)
-    return cost[E], optimal_paths
+        raise Exception(f"Unable to solve maze.")
+    return min_cost, all_shortest_paths
    # return cost[E], paths
 
 
@@ -142,25 +101,20 @@ class App(app.App):
         maze, S = parse(self.data)
         if self.debug:
             print_maze(maze)
-        cost, paths = search_with_queue(maze, S, -1j)
+        cost, _ = search_with_queue(maze, S, EAST)
         return cost
 
     def part_two(self):
         maze, S = parse(self.data)
         if self.debug:
             print_maze(maze)
-        cost, paths = search_with_queue(maze, S, -1j)
+        _, paths = search_with_queue(maze, S, EAST)
         restpoints = set()
         for path in paths:
-            self.log(f'Printing path {path}')
-            maze, _ = parse(self.data)
-            for p in path[0]:
-                maze[p] = 'O'
-            print_maze(maze)
-            restpoints.update(path[0])
-        # for p in restpoints:
-            # maze[p] = "O"
-        # print_maze(maze)
+            restpoints.update(path)
+        for p in restpoints:
+            maze[p] = "O"
+        print_maze(maze)
         return len(restpoints)
 
 
@@ -184,27 +138,6 @@ myapp = App(
 """
 )
 
-# TODO: Why when X is # we don't find the path that goes all the way up first? The cost is the same!
-# TEST
-myapp = App(
-    """
-###############
-#.......#....E#
-#.#.###.#.###.#
-#.....#.#...#.#
-#.###.#####.#.#
-#.#.#.......#.#
-#.###########.#
-#.#.........#.#
-###.#######.#.#
-#...#.....#.#.#
-#.#.#######.#.#
-#.....#...#.#.#
-#.#####.#.#.#.#
-#S#.#.....#...#
-###############
-"""
-)
 
 myapp.test_one(7036, None)
 myapp.test_two(45, None)
@@ -229,7 +162,8 @@ myapp = App(
 #################
 """
 )
-# myapp.test_one(11048, 123540)
-# myapp.test_two(64, None)
+myapp.test_one(11048, 123540)
+myapp.test_two(64, 665)
 
 # myapp.run()
+# 552 too low
