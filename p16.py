@@ -26,7 +26,7 @@ def search_with_queue(maze, start, curdir):
 
     # path_costs dictionary node -> cost    
     # Default cost for all nodes is inf
-    path_costs = defaultdict(lambda: float('inf')) | {start:0}
+    path_costs = defaultdict(lambda: float('inf')) | {(start, curdir):0}
 
     # Current queue of nodes
     # (node, current_direction, cost, [path as list of nodes to get here, including the node])
@@ -66,8 +66,8 @@ def search_with_queue(maze, start, curdir):
         for n, d, c in neighbors:
             new_cost = cost+c
             # do we need strict less?
-            if new_cost <= path_costs[n]:
-                path_costs[n] = new_cost
+            if new_cost <= path_costs[(n, d)]:
+                path_costs[(n, d)] = new_cost
                 queue.append((n, d, new_cost, path+[n]))
     # print where are you coming from
     if E is None:
@@ -92,7 +92,7 @@ def print_maze(maze):
     maxcol = int(max(i.imag for i in maze)) + 1
     for row in range(maxrow):
         print(
-            f"{row:02} " + str.join("", [maze[row + col * 1j] for col in range(maxcol)])
+            f"{row:03} " + str.join("", [maze[row + col * 1j] for col in range(maxcol)])
         )
 
 
@@ -138,50 +138,30 @@ myapp = App(
 """
 )
 
-# OK TEST run of part_one: 7036
-# 00 ###############
-# 01 #.......#....O#
-# 02 #.#.###.#.###O#
-# 03 #.....#.#...#O#
-# 04 #.###.#####.#O#
-# 05 #.#.#.......#O#
-# 06 #.#.#####.###O#
-# 07 #..OOOOOOOOO#O#
-# 08 ###O#O#####O#O#
-# 09 #..O#O....#O#O#
-# 10 #.#O#O###.#O#O#
-# 11 #OOOOO#...#O#O#
-# 12 #O###.#.#.#O#O#
-# 13 #O..#.....#OOO#
-# 14 ###############
-# ERROR: TEST run of part_two: got 42, expected 45 instead
-#
-# ARGH! It's missing path 13+1j -> 12+1j -> 11+1j -> 10+1j -> 9+1j -> 9+2j -> ...
-
-# myapp.test_one(7036, None)
+myapp.test_one(7036, None)
 myapp.test_two(45, None)
-# myapp = App(
-#     """
-# #################
-# #...#...#...#..E#
-# #.#.#.#.#.#.#.#.#
-# #.#.#.#...#...#.#
-# #.#.#.#.###.#.#.#
-# #...#.#.#.....#.#
-# #.#.#.#.#.#####.#
-# #.#...#.#.#.....#
-# #.#.#####.#.###.#
-# #.#.#.......#...#
-# #.#.###.#####.###
-# #.#.#...#.....#.#
-# #.#.#.#####.###.#
-# #.#.#.........#.#
-# #.#.#.#########.#
-# #S#.............#
-# #################
-# """
-# )
-# myapp.test_one(11048, 123540)
-# myapp.test_two(64, 665)
+myapp = App(
+    """
+#################
+#...#...#...#..E#
+#.#.#.#.#.#.#.#.#
+#.#.#.#...#...#.#
+#.#.#.#.###.#.#.#
+#...#.#.#.....#.#
+#.#.#.#.#.#####.#
+#.#...#.#.#.....#
+#.#.#####.#.###.#
+#.#.#.......#...#
+#.#.###.#####.###
+#.#.#...#.....#.#
+#.#.#.#####.###.#
+#.#.#.........#.#
+#.#.#.#########.#
+#S#.............#
+#################
+"""
+)
+myapp.test_one(11048, 123540)
+myapp.test_two(64, 665)
 
 # myapp.run()
