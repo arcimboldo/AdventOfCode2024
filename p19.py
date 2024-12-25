@@ -25,7 +25,7 @@ class App(app.App):
         return count
 
     def part_two(self):
-        pass
+        return sum(map(lambda design: can_make(design, self.patterns), self.designs))
 
 
 myapp = App(
