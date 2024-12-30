@@ -23,29 +23,43 @@ class App(app.App):
 
     def part_two(self):
         numbers = list(map(int, self.data.splitlines()))
+        # Map secret number -> list of deltas
+        deltas = {}
+        # map secret number -> list of prices (only the last digit)
         prices = {}
         for n in numbers:
             prev = 0
             changes = []
+            delta = []
             for last in calculate(n, 2000):
-                d = last%10
-                changes.append(d-prev)
-                prev = d
-            prices[n] = changes
+                p = last%10
+                changes.append(p-prev)
+                delta.append(p)
+                prev = p
+            deltas[n] = changes
+            prices[n] = delta + [prev]
+
+        # slices: map 4-tuple -> {number -> max price}
         slices = defaultdict(dict)
-        for n, p in prices.items():
-            for i in range(0, 2000):
-                s = p[i:i+4]
+        for n, delta in deltas.items():
+            # for each number, get the slices and add them as tuple to slices.
+            for i in range(2000):
+                s = delta[i:i+4]
                 if len(s) != 4:
                     break
-                t = tuple(p[i:i+4]) 
-                slices[t][n] = max(slices[t].get(n, 0), s[i+3])
+                t = tuple(delta[i:i+4]) 
+                # This 
+                if n not in slices[t]:
+                    slices[t][n] = prices[n][i+3]
+
         best = {}
         for t in slices:
-            s = sum(t.values())
-            best[t] = s
+            best[t] = sum(slices[t].values())
+
         m = max(best.values())
-        return [t for t in best if best[t] == m][0]
+
+        return m
+
 
 
 myapp = App("""
@@ -55,10 +69,11 @@ myapp = App("""
 2024
 """)
 myapp.test_one(None, 20411980517)
+myapp.test_two(24, None)
 myapp = App('''1
 2
 3
 2024
 ''')
-myapp.test_two([-2,1,-1,3], None)
-# myapp.run()
+myapp.test_two(23, 2362)
+myapp.run()
